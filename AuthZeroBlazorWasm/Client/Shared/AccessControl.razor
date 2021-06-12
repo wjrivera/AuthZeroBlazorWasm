@@ -1,0 +1,36 @@
+﻿<AuthorizeView>
+    <Authorized>
+        Hello, @context?.User?.Identity?.Name!
+        @{
+            _authenticationState = @context;
+        }
+        <a href="#" @onclick="BeginSignOut">Log out</a>
+    </Authorized>
+    <NotAuthorized>
+        <a href="authentication/login" @onclick="BeginSignIn">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+    [Inject]
+    public NavigationManager Navigation { get; set; }
+    [Inject]
+    public SignOutSessionStateManager SignOutManager { get; set; }
+
+    private AuthenticationState _authenticationState;
+
+    private async Task BeginSignOut(MouseEventArgs args)
+    {
+        await SignOutManager.SetSignOutState();
+        Navigation.NavigateTo("authentication/logout");
+    }
+
+    private void BeginSignIn(MouseEventArgs args)
+    {
+        if(_authenticationState?.User == null) return;
+        var user = _authenticationState.User;
+        if (user != null) Console.WriteLine($"USER: {user.Identity?.Name}");
+        if(user.IsInRole("admin.user")) Console.WriteLine("ADMIN FOUND");
+        if(user.IsInRole("normal.user")) Console.WriteLine("NORMAL FOUND");
+    }
+}
