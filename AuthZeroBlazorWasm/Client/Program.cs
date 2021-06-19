@@ -22,19 +22,16 @@ namespace AuthZeroBlazorWasm.Client
 
             builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>()
                 .CreateClient("ServerAPI"));
-
-            //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
+            
             builder.Services.AddOidcAuthentication(options =>
             {
                 builder.Configuration.Bind("Auth0", options.ProviderOptions);
-                options.UserOptions.RoleClaim = "https://schemas.quickstarts.com/roles";
-                options.ProviderOptions.DefaultScopes.Add("email");
-                options.ProviderOptions.DefaultScopes.Add("groups");
                 options.ProviderOptions.ResponseType = "code";
-            })
-                .AddAccountClaimsPrincipalFactory<AccountClaimsPrincipalFactory>()
-                ;
+                options.UserOptions.RoleClaim = "https://schemas.quickstarts.com/roles";
+                options.ProviderOptions.DefaultScopes.Add("openid");
+                options.ProviderOptions.DefaultScopes.Add("profile");
+                options.ProviderOptions.DefaultScopes.Add("email");
+            }).AddAccountClaimsPrincipalFactory<AccountClaimsPrincipalFactory>();
 
             await builder.Build().RunAsync();
         }

@@ -1,8 +1,62 @@
 ﻿@page "/"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "normal.user,admin.user")]
 
-<h1>Hello, world!</h1>
+<h1>Welcome, @_username!</h1>
+<ul>
+    <li>Auth0 ID: @_authId</li>
+    <li>Nickname: @_nickname</li>
+    <li>Email: @_email</li>
+    <li>Verified: @(_emailVerified ? "Yes" : "No")</li>
+</ul>
+<br/>
+<img src="@_picture">
 
-Welcome to your new app.
+@code
+{
+    [Inject]
+    public AuthenticationStateProvider AuthState { get; set; }
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    private string _username = "Anonymous Username";
+    private string _email = "Anonymous Email";
+    private string _nickname = "Anonymous Nickname";
+    private bool _emailVerified = false;
+    private string _authId = "none";
+    private string _picture = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthState.GetAuthenticationStateAsync();
+        
+        _username = state.User.Claims
+            .Where(c => c.Type.Equals("name"))
+            .Select(c => c.Value)
+            .FirstOrDefault() ?? string.Empty;
+
+        _email = state.User.Claims
+            .Where(c => c.Type.Equals("email"))
+            .Select(c => c.Value)
+            .FirstOrDefault() ?? string.Empty;
+
+        _nickname = state.User.Claims
+            .Where(c => c.Type.Equals("nickname"))
+            .Select(c => c.Value)
+            .FirstOrDefault() ?? string.Empty;
+
+        _emailVerified = state.User.Claims
+            .Where(c => c.Type.Equals("email_verified"))
+            .Select(c => c.Value)
+            .FirstOrDefault() == "true";
+
+        _authId = state.User.Claims
+            .Where(c => c.Type.Equals("sub"))
+            .Select(c => c.Value)
+            .FirstOrDefault() ?? string.Empty;
+
+        _picture = state.User.Claims
+            .Where(c => c.Type.Equals("picture"))
+            .Select(c => c.Value)
+            .FirstOrDefault() ?? string.Empty;
+
+        await base.OnInitializedAsync();
+    }
+}
